@@ -1,0 +1,16 @@
+2026-07-30 16:26:51 [INFO] (coordinate_utils.py:35) -> Coordenadas cargadas desde resources\relative-coords.json
+2026-07-30 16:26:51 [INFO] (IdleSkillingApp.py:19) -> ==================================================
+2026-07-30 16:26:51 [INFO] (IdleSkillingApp.py:20) ->          INICIANDO GAME MACROS - IDLE SKILLING    
+2026-07-30 16:26:51 [INFO] (IdleSkillingApp.py:21) -> ==================================================
+2026-07-30 16:26:51 [INFO] (screen_finder.py:11) -> Buscando la ventana exacta: 'Idle Skilling'...
+2026-07-30 16:26:51 [INFO] (screen_finder.py:21) -> Ventana encontrada con éxito: 'Idle Skilling'!
+2026-07-30 16:26:51 [INFO] (screen_finder.py:32) -> La ventana del juego ha sido traída al frente a la fuerza!
+2026-07-30 16:26:51 [INFO] (IdleSkillingApp.py:28) -> Validación exitosa. Entrando al menú principal...
+2026-07-30 16:26:51 [INFO] (menu_utils.py:16) -> 
+================== MENÚ PRINCIPAL ==================
+2026-07-30 16:26:51 [INFO] (menu_utils.py:17) -> 1. Configurar / Capturar nuevas coordenadas (Shift + Clic)
+2026-07-30 16:26:51 [INFO] (menu_utils.py:19) -> 2. Crear nueva rutina personalizada
+2026-07-30 16:26:51 [INFO] (menu_utils.py:20) -> 3. Ejecutar rutina Secuencial guardada
+2026-07-30 16:26:51 [INFO] (menu_utils.py:21) -> 4. Ejecutar rutina Paralela guardada
+2026-07-30 16:26:51 [INFO] (menu_utils.py:22) -> 0. Salir
+2026-07-30 16:26:51 [INFO] (menu_utils.py:23) -> ====================================================

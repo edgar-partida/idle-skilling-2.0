@@ -1,8 +1,12 @@
 import sys
+from utils.logger_utils import configurar_logger
 from utils.screen_finder import traer_ventana_al_frente
 from utils.coordinate_utils import CoordinateManager
 from utils.routine_utils import RoutineManager
 from utils.menu_utils import MenuUtils
+from utils.logger_utils import configurar_logger
+
+logger = configurar_logger()
 
 
 class IdleSkillingApp:
@@ -12,16 +16,16 @@ class IdleSkillingApp:
         self.routine_manager = RoutineManager(titulo_objetivo=titulo_objetivo)
 
     def iniciar(self) -> None:
-        print("==================================================")
-        print("         INICIANDO GAME MACROS - IDLE SKILLING    ")
-        print("==================================================")
+        logger.info("==================================================")
+        logger.info("         INICIANDO GAME MACROS - IDLE SKILLING    ")
+        logger.info("==================================================")
 
         if not traer_ventana_al_frente(self.titulo_objetivo):
-            print(
-                "\n❌ No es posible continuar la ejecución porque la ventana no está disponible.")
+            logger.error(
+                "No es posible continuar la ejecución porque la ventana no está disponible.")
             sys.exit(1)
 
-        print("\n✅ Validación exitosa. Entrando al menú principal...\n")
+        logger.info("Validación exitosa. Entrando al menú principal...")
         self._ejecutar_ciclo_menu()
 
     def _ejecutar_ciclo_menu(self) -> None:
@@ -54,10 +58,10 @@ class IdleSkillingApp:
 
             elif opcion == "0":
                 self.coord_manager.detener_captura()
-                print("\nSaliendo de la aplicación. ¡Hasta luego!")
+                logger.info("Saliendo de la aplicación. ¡Hasta luego!")
                 break
             else:
-                print("\n⚠️ Opción no válida. Intenta de nuevo.\n")
+                logger.warning("Opción no válida. Intenta de nuevo.")
 
 
 if __name__ == "__main__":

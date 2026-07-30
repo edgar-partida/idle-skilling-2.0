@@ -6,7 +6,10 @@ import keyboard
 import pygetwindow as gw
 import win32gui
 import win32con
+from utils.logger_utils import configurar_logger
 from utils.screen_finder import traer_ventana_al_frente
+
+logger = configurar_logger()
 
 
 class RoutineManager:
@@ -29,7 +32,7 @@ class RoutineManager:
                 with open(self.coords_file, "r", encoding="utf-8") as f:
                     self.puntos_configurados = json.load(f)
             except Exception as e:
-                print(f"⚠️ Error al cargar coordenadas: {e}")
+                logger.warning(f"Error al cargar coordenadas: {e}")
 
     def _cargar_json(self, ruta):
         if os.path.exists(ruta):
@@ -47,31 +50,32 @@ class RoutineManager:
             json.dump(datos, f, indent=4, ensure_ascii=False)
 
     def crear_rutina_interactiva(self):
-        print("\n==================================================")
-        print("           CREADOR DE RUTINAS NUEVAS")
-        print("==================================================")
+        logger.info("==================================================")
+        logger.info("           CREADOR DE RUTINAS NUEVAS")
+        logger.info("==================================================")
 
         if not self.puntos_configurados:
-            print(
-                "❌ No hay acciones configuradas en 'relative-coords.json'. Configura coordenadas primero.")
+            logger.error(
+                "No hay acciones configuradas en 'relative-coords.json'. Configura coordenadas primero.")
             return
 
-        print("Acciones disponibles que puedes usar:")
+        logger.info("Acciones disponibles que puedes usar:")
         for nombre in self.puntos_configurados.keys():
-            print(f" -> {nombre}")
+            logger.info(f" -> {nombre}")
 
         tipo = input("\n¿Qué tipo de rutina deseas crear?\n1. Secuencial (Paso a paso con delays)\n2. Paralela (Por intervalos de milisegundos)\nElige opción (1 o 2): ").strip()
 
         nombre_rutina = input(
             "Asigna un nombre único para esta rutina: ").strip()
         if not nombre_rutina:
-            print("❌ El nombre no puede estar vacío.")
+            logger.warning("El nombre no puede estar vacío.")
             return
 
         if tipo == "1":
             pasos = []
-            print("\n--- Armando Secuencia ---")
-            print("Escribe la acción o 'DELAY'. Escribe 'fin' cuando termines.")
+            logger.info("--- Armando Secuencia ---")
+            logger.info(
+                "Escribe la acción o 'DELAY'. Escribe 'fin' cuando termines.")
 
             while True:
                 accion = input("Paso (Acción o DELAY / fin): ").strip().upper()
@@ -83,26 +87,26 @@ class RoutineManager:
                             input("  -> Duración del delay en milisegundos (ej: 500): "))
                         pasos.append(["DELAY", ms])
                     except ValueError:
-                        print("⚠️ Valor inválido.")
+                        logger.warning("Valor inválido.")
                 elif accion in self.puntos_configurados:
                     pasos.append([accion, 0])
-                    print(f"  -> Añadido: {accion}")
+                    logger.info(f"  -> Añadido: {accion}")
                 else:
-                    print("⚠️ Acción no reconocida.")
+                    logger.warning("Acción no reconocida.")
 
             if pasos:
                 rutinas = self._cargar_json(self.seq_routines_file)
                 rutinas[nombre_rutina] = pasos
                 self._guardar_json(self.seq_routines_file, rutinas)
-                print(
-                    f"✅ ¡Rutina secuencial '{nombre_rutina}' guardada exitosamente!")
+                logger.info(
+                    f"¡Rutina secuencial '{nombre_rutina}' guardada exitosamente!")
             else:
-                print("⚠️ Rutina vacía, no se guardó.")
+                logger.warning("Rutina vacía, no se guardó.")
 
         elif tipo == "2":
             acciones_intervalos = {}
-            print("\n--- Armando Rutina Paralela ---")
-            print(
+            logger.info("--- Armando Rutina Paralela ---")
+            logger.info(
                 "Escribe la acción y su intervalo en milisegundos. Escribe 'fin' para terminar.")
 
             while True:
@@ -114,20 +118,20 @@ class RoutineManager:
                         ms = int(
                             input(f"  -> ¿Cada cuántos milisegundos '{accion}'? (ej: 5000): "))
                         acciones_intervalos[accion] = ms
-                        print(f"  -> Configurado: {accion} cada {ms}ms")
+                        logger.info(f"  -> Configurado: {accion} cada {ms}ms")
                     except ValueError:
-                        print("⚠️ Debe ser un número válido.")
+                        logger.warning("Debe ser un número válido.")
                 else:
-                    print("⚠️ Acción no encontrada.")
+                    logger.warning("Acción no encontrada.")
 
             if acciones_intervalos:
                 rutinas = self._cargar_json(self.par_routines_file)
                 rutinas[nombre_rutina] = acciones_intervalos
                 self._guardar_json(self.par_routines_file, rutinas)
-                print(
-                    f"✅ ¡Rutina paralela '{nombre_rutina}' guardada exitosamente!")
+                logger.info(
+                    f"¡Rutina paralela '{nombre_rutina}' guardada exitosamente!")
             else:
-                print("⚠️ Rutina vacía, no se guardó.")
+                logger.warning("Rutina vacía, no se guardó.")
 
     def _obtener_render_hwnd(self, hwnd_padre):
         """Busca internamente la ventana hija de renderizado de Chromium/Electron."""
@@ -157,8 +161,8 @@ class RoutineManager:
                 break
 
         if not win:
-            print(
-                f"⚠️ No se encontró una ventana con el título exacto: '{titulo_ventana}'")
+            logger.warning(
+                f"No se encontró una ventana con el título exacto: '{titulo_ventana}'")
             return
 
         hwnd_padre = win._hWnd
@@ -187,18 +191,19 @@ class RoutineManager:
             win32gui.PostMessage(
                 hwnd_render, win32con.WM_LBUTTONUP, 0, l_param)
 
-            print(
-                f"🖱️ PostMessage en segundo plano [{nombre_accion}] -> X={x_interna}, Y={y_interna}")
+            logger.info(
+                f"PostMessage en segundo plano [{nombre_accion}] -> X={x_interna}, Y={y_interna}")
 
         except Exception as e:
-            print(f"⚠️ Error al enviar PostMessage en '{nombre_accion}': {e}")
+            logger.warning(
+                f"Error al enviar PostMessage en '{nombre_accion}': {e}")
 
     def _escuchar_escape(self):
         """Monitorea de forma segura la tecla ESC sin bloquear instantáneamente."""
         while not self.detenido:
             if keyboard.is_pressed('esc'):
                 self.detenido = True
-                print("\n🛑 ¡Detenido por el usuario (ESC)!")
+                logger.info("Detenido por el usuario (ESC)!")
                 break
             time.sleep(0.1)
 
@@ -207,7 +212,7 @@ class RoutineManager:
         rutinas = self._cargar_json(ruta_archivo)
 
         if not rutinas:
-            print(f"❌ No hay rutinas {tipo}s guardadas.")
+            logger.error(f"No hay rutinas {tipo}s guardadas.")
             return
 
         nombres_rutinas = list(rutinas.keys())
@@ -215,18 +220,19 @@ class RoutineManager:
         try:
             indice = int(indice_str) - 1
             if indice < 0 or indice >= len(nombres_rutinas):
-                print("❌ Número de rutina fuera de rango.")
+                logger.error("Número de rutina fuera de rango.")
                 return
         except ValueError:
-            print("❌ Debes ingresar un número válido.")
+            logger.error("Debes ingresar un número válido.")
             return
 
         nombre_seleccionado = nombres_rutinas[indice]
 
         # 1. Traer la ventana al frente obligatoriamente antes de ejecutar
-        print(f"\nPreparando ejecución de '{nombre_seleccionado}'...")
+        logger.info(f"Preparando ejecución de '{nombre_seleccionado}'...")
         if not traer_ventana_al_frente(self.titulo_objetivo):
-            print("❌ No se pudo enfocar la ventana del juego. Cancelando ejecución.")
+            logger.error(
+                "No se pudo enfocar la ventana del juego. Cancelando ejecución.")
             return
 
         self.detenido = False
@@ -235,8 +241,8 @@ class RoutineManager:
 
         if tipo == "secuencial":
             pasos = rutinas[nombre_seleccionado]
-            print(
-                f"\n▶️ Ejecutando SECUENCIAL: '{nombre_seleccionado}'. Presiona [ESC] para salir.")
+            logger.info(
+                f"Ejecutando SECUENCIAL: '{nombre_seleccionado}'. Presiona [ESC] para salir.")
 
             while not self.detenido:
                 for tipo_accion, valor in pasos:
@@ -252,8 +258,8 @@ class RoutineManager:
 
         elif tipo == "paralela":
             acciones_intervalos = rutinas[nombre_seleccionado]
-            print(
-                f"\n▶️ Ejecutando PARALELA: '{nombre_seleccionado}'. Presiona [ESC] para salir.")
+            logger.info(
+                f"Ejecutando PARALELA: '{nombre_seleccionado}'. Presiona [ESC] para salir.")
 
             def tarea(acc, ms):
                 while not self.detenido:

@@ -4,6 +4,9 @@ import tkinter as tk
 from tkinter import simpledialog
 import pygetwindow as gw
 from pynput import mouse, keyboard
+from utils.logger_utils import configurar_logger
+
+logger = configurar_logger()
 
 
 class CoordinateManager:
@@ -29,9 +32,9 @@ class CoordinateManager:
             try:
                 with open(self.coords_file, "r", encoding="utf-8") as f:
                     self.puntos_configurados = json.load(f)
-                print(f"📁 Coordenadas cargadas desde {self.coords_file}")
+                logger.info(f"Coordenadas cargadas desde {self.coords_file}")
             except Exception as e:
-                print(f"⚠️ Error al cargar el archivo JSON: {e}")
+                logger.warning(f"Error al cargar el archivo JSON: {e}")
                 self.puntos_configurados = {}
 
     def _guardar_coordenadas(self):
@@ -40,10 +43,10 @@ class CoordinateManager:
             with open(self.coords_file, "w", encoding="utf-8") as f:
                 json.dump(self.puntos_configurados, f,
                           indent=4, ensure_ascii=False)
-            print(
-                f"💾 Coordenadas guardadas exitosamente en {self.coords_file}")
+            logger.info(
+                f"Coordenadas guardadas exitosamente en {self.coords_file}")
         except Exception as e:
-            print(f"⚠️ Error al guardar en el archivo JSON: {e}")
+            logger.warning(f"Error al guardar en el archivo JSON: {e}")
 
     def _pedir_nombre_gui(self) -> str:
         """Abre una ventana emergente de tkinter forzada al frente y con foco."""
@@ -71,12 +74,12 @@ class CoordinateManager:
 
     def _on_click(self, x, y, button, pressed):
         if self.capturando and pressed and button == mouse.Button.left and self.shift_pressed:
-            print(f"\n[Shift + Clic detectado en pantalla: X={x}, Y={y}]")
+            logger.info(f"Shift + Clic detectado en pantalla: X={x}, Y={y}")
 
             try:
                 ventana_activa = gw.getActiveWindow()
                 if not ventana_activa:
-                    print("⚠️ No se detectó ninguna ventana activa.")
+                    logger.warning("No se detectó ninguna ventana activa.")
                     return
 
                 win_x, win_y = ventana_activa.left, ventana_activa.top
@@ -97,20 +100,20 @@ class CoordinateManager:
                         "ventana_ref": ventana_activa.title
                     }
                     self._guardar_coordenadas()
-                    print(f"✅ Acción '{nombre}' guardada correctamente.")
+                    logger.info(f"Acción '{nombre}' guardada correctamente.")
                 else:
-                    print("❌ Captura cancelada por el usuario.")
+                    logger.warning("Captura cancelada por el usuario.")
 
             except Exception as e:
-                print(f"❌ Error al procesar la captura: {e}")
+                logger.error(f"Error al procesar la captura: {e}")
 
     def iniciar_captura(self):
-        print("\n==================================================")
-        print("   MODO CAPTURA DE COORDENADAS ACTIVADO")
-        print("   -> Mantén presionado Shift y haz Clic en el juego.")
-        print("   -> Se abrirá una ventana para ponerle nombre.")
-        print("   -> Presiona ENTER en la terminal para terminar.")
-        print("==================================================")
+        logger.info("==================================================")
+        logger.info("   MODO CAPTURA DE COORDENADAS ACTIVADO")
+        logger.info("   -> Mantén presionado Shift y haz Clic en el juego.")
+        logger.info("   -> Se abrirá una ventana para ponerle nombre.")
+        logger.info("   -> Presiona ENTER en la terminal para terminar.")
+        logger.info("==================================================")
 
         self.capturando = True
         self.listener_mouse = mouse.Listener(on_click=self._on_click)
@@ -126,4 +129,4 @@ class CoordinateManager:
             self.listener_mouse.stop()
         if self.listener_teclado:
             self.listener_teclado.stop()
-        print("\n🛑 Modo captura finalizado.")
+        logger.info("Modo captura finalizado.")
