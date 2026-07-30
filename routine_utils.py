@@ -3,9 +3,9 @@ import json
 import time
 import threading
 import keyboard
-import pyautogui
 import pygetwindow as gw
 import win32gui
+import win32con
 from utils.screen_finder import traer_ventana_al_frente
 
 
@@ -48,7 +48,7 @@ class RoutineManager:
 
     def crear_rutina_interactiva(self):
         print("\n==================================================")
-        print("          CREADOR DE RUTINAS NUEVAS")
+        print("           CREADOR DE RUTINAS NUEVAS")
         print("==================================================")
 
         if not self.puntos_configurados:
@@ -129,6 +129,18 @@ class RoutineManager:
             else:
                 print("⚠️ Rutina vacía, no se guardó.")
 
+    def _obtener_render_hwnd(self, hwnd_padre):
+        """Busca internamente la ventana hija de renderizado de Chromium/Electron."""
+        render_hwnds = []
+
+        def callback(hwnd, _):
+            if win32gui.GetClassName(hwnd) == "Chrome_RenderWidgetHostHWND":
+                render_hwnds.append(hwnd)
+            return True
+
+        win32gui.EnumChildWindows(hwnd_padre, callback, None)
+        return render_hwnds[0] if render_hwnds else hwnd_padre
+
     def _hacer_clic(self, nombre_accion: str):
         if nombre_accion not in self.puntos_configurados:
             return
@@ -136,33 +148,50 @@ class RoutineManager:
         data = self.puntos_configurados[nombre_accion]
         titulo_ventana = data['ventana_ref']
 
-        ventanas = gw.getWindowsWithTitle(titulo_ventana)
-        if not ventanas:
-            print(f"⚠️ No se encontró la ventana: '{titulo_ventana}'")
+        # Búsqueda estricta (EQUALS) en lugar de parcial (CONTAINS)
+        ventanas_candidatas = gw.getWindowsWithTitle(titulo_ventana)
+        win = None
+        for w in ventanas_candidatas:
+            if w.title == titulo_ventana:
+                win = w
+                break
+
+        if not win:
+            print(
+                f"⚠️ No se encontró una ventana con el título exacto: '{titulo_ventana}'")
             return
 
-        win = ventanas[0]
+        hwnd_padre = win._hWnd
 
         try:
-            # Usar la posición absoluta de la ventana en pantalla
-            win_x, win_y = win.left, win.top
-            win_w, win_h = win.width, win.height
+            hwnd_render = self._obtener_render_hwnd(hwnd_padre)
 
-            # Nota: Si el juego tiene barra de título superior, Windows a veces desplaza el contenido interno.
-            # Si tus porcentajes se guardaron con la ventana en su estado actual, usamos directamente el tamaño total:
-            target_x = win_x + int(data['porcentaje_x'] * win_w)
-            target_y = win_y + int(data['porcentaje_y'] * win_h)
+            client_rect = win32gui.GetClientRect(hwnd_padre)
+            ancho_cliente = client_rect[2]
+            alto_cliente = client_rect[3]
 
-            # Protección de seguridad para que nunca haga clic en la barra de tareas o fuera de la pantalla
-            if target_y > win_y + win_h:
-                target_y = win_y + win_h - 10
+            if ancho_cliente <= 0 or alto_cliente <= 0:
+                ancho_cliente = win.width
+                alto_cliente = win.height
 
-            pyautogui.click(target_x, target_y)
+            x_interna = int(data['porcentaje_x'] * ancho_cliente)
+            y_interna = int(data['porcentaje_y'] * alto_cliente)
+
+            l_param = (y_interna << 16) | (x_interna & 0xFFFF)
+
+            win32gui.PostMessage(
+                hwnd_render, win32con.WM_MOUSEMOVE, 0, l_param)
+            win32gui.PostMessage(
+                hwnd_render, win32con.WM_LBUTTONDOWN, win32con.MK_LBUTTON, l_param)
+            time.sleep(0.03)
+            win32gui.PostMessage(
+                hwnd_render, win32con.WM_LBUTTONUP, 0, l_param)
+
             print(
-                f"🖱️ Clic exacto en [{nombre_accion}] -> Pantalla X={target_x}, Y={target_y}")
+                f"🖱️ PostMessage en segundo plano [{nombre_accion}] -> X={x_interna}, Y={y_interna}")
 
         except Exception as e:
-            print(f"⚠️ Error al calcular la posición exacta del clic: {e}")
+            print(f"⚠️ Error al enviar PostMessage en '{nombre_accion}': {e}")
 
     def _escuchar_escape(self):
         """Monitorea de forma segura la tecla ESC sin bloquear instantáneamente."""
@@ -243,6 +272,3 @@ class RoutineManager:
 
             while not self.detenido:
                 time.sleep(0.2)
-
-
-0
