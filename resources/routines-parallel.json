@@ -1,0 +1,12 @@
+{
+    "PruebaCesar": {
+        "CLAW": 5000
+    },
+    "TEST": {
+        "CLAW": 5500,
+        "POISON": 28000,
+        "METEOR": 22000,
+        "FLURRY": 15000,
+        "SMITE": 29500
+    }
+}

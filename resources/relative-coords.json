@@ -1,0 +1,27 @@
+{
+    "CLAW": {
+        "porcentaje_x": 0.3246,
+        "porcentaje_y": 0.8507,
+        "ventana_ref": "Idle Skilling"
+    },
+    "POISON": {
+        "porcentaje_x": 0.4118,
+        "porcentaje_y": 0.8478,
+        "ventana_ref": "Idle Skilling"
+    },
+    "METEOR": {
+        "porcentaje_x": 0.4969,
+        "porcentaje_y": 0.8459,
+        "ventana_ref": "Idle Skilling"
+    },
+    "FLURRY": {
+        "porcentaje_x": 0.5784,
+        "porcentaje_y": 0.8497,
+        "ventana_ref": "Idle Skilling"
+    },
+    "SMITE": {
+        "porcentaje_x": 0.6625,
+        "porcentaje_y": 0.8468,
+        "ventana_ref": "Idle Skilling"
+    }
+}
